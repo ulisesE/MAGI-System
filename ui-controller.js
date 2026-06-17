@@ -424,6 +424,84 @@ async function renderMagiOutput(responseJson, decision, category, isFromCache) {
   }, maxDelay + (isFromCache ? 150 : 800));
 }
 
+// Dynamic Model Caching (24h - Upgrade 4 / Iteration 2)
+async function populateGeminiModels() {
+  const modelSelect = document.getElementById('geminiModel');
+  if (!modelSelect) return;
+
+  const cacheKey = 'MAGI_MODELS_CACHE';
+  const cacheTimeKey = 'MAGI_MODELS_CACHE_TIME';
+  const cachedModels = localStorage.getItem(cacheKey);
+  const cachedTime = localStorage.getItem(cacheTimeKey);
+  const now = Date.now();
+  const ONE_DAY = 24 * 60 * 60 * 1000;
+
+  function renderModelOptions(models) {
+    modelSelect.innerHTML = '';
+    models.forEach(m => {
+      const option = document.createElement('option');
+      option.value = m.mName;
+      option.textContent = `${m.mName}${m.labelSuffix || ''}`;
+      if (m.mName === state.geminiModel) {
+        option.selected = true;
+      }
+      modelSelect.appendChild(option);
+    });
+  }
+
+  const defaults = [
+    { mName: 'gemini-1.5-flash', labelSuffix: ' (Recomendado - Gratuito 15 RPM)' },
+    { mName: 'gemini-1.5-pro', labelSuffix: ' (Inteligente - Gratuito 2 RPM)' },
+    { mName: 'gemini-2.0-flash-lite-preview-02-05', labelSuffix: ' (Ligero / Gratuito)' },
+    { mName: 'gemini-2.0-flash', labelSuffix: ' (Estándar 2.0)' },
+    { mName: 'gemini-2.5-flash', labelSuffix: ' (Estándar 2.5)' }
+  ];
+
+  if (cachedModels && cachedTime && (now - parseInt(cachedTime, 10) < ONE_DAY)) {
+    console.log("MAGI: Cargando lista de modelos desde caché local (24h).");
+    renderModelOptions(JSON.parse(cachedModels));
+    return;
+  }
+
+  if (!state.geminiKey) {
+    renderModelOptions(defaults);
+    return;
+  }
+
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${state.geminiKey}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("No se pudo obtener la lista de modelos");
+    const data = await response.json();
+    
+    if (data.models && data.models.length > 0) {
+      const availableModels = data.models
+        .filter(m => m.supportedGenerationMethods.includes('generateContent'))
+        .map(m => {
+          const mName = m.name.replace('models/', '');
+          let labelSuffix = '';
+          if (mName === 'gemini-1.5-flash') labelSuffix = ' (Recomendado - Gratuito 15 RPM)';
+          else if (mName === 'gemini-1.5-pro') labelSuffix = ' (Inteligente - Gratuito 2 RPM)';
+          else if (mName.includes('lite')) labelSuffix = ' (Ligero / Gratuito)';
+          else if (mName === 'gemini-2.0-flash') labelSuffix = ' (Estándar 2.0)';
+          else if (mName === 'gemini-2.5-flash') labelSuffix = ' (Estándar 2.5)';
+          return { mName, labelSuffix };
+        });
+
+      if (availableModels.length > 0) {
+        localStorage.setItem(cacheKey, JSON.stringify(availableModels));
+        localStorage.setItem(cacheTimeKey, now.toString());
+        renderModelOptions(availableModels);
+        return;
+      }
+    }
+    renderModelOptions(defaults);
+  } catch (error) {
+    console.error("Error al cargar modelos dinámicos:", error);
+    renderModelOptions(defaults);
+  }
+}
+
 // App Initialization
 async function init() {
   if (state.geminiKey) {
