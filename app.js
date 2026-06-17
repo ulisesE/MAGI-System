@@ -3,6 +3,7 @@
 // State management
 const state = {
   geminiKey: localStorage.getItem('MAGI_GEMINI_KEY') || '',
+  geminiModel: localStorage.getItem('MAGI_GEMINI_MODEL') || 'gemini-1.5-flash',
   supabaseUrl: localStorage.getItem('MAGI_SUPABASE_URL') || '',
   supabaseKey: localStorage.getItem('MAGI_SUPABASE_KEY') || '',
   history: []
@@ -14,6 +15,7 @@ const settingsModal = document.getElementById('settingsModal');
 const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 const settingsForm = document.getElementById('settingsForm');
 const geminiKeyInput = document.getElementById('geminiKey');
+const geminiModelSelect = document.getElementById('geminiModel');
 const supabaseUrlInput = document.getElementById('supabaseUrl');
 const supabaseKeyInput = document.getElementById('supabaseKey');
 
@@ -56,6 +58,9 @@ dateInput.value = new Date().toISOString().split('T')[0];
 function init() {
   if (state.geminiKey) {
     geminiKeyInput.value = state.geminiKey;
+  }
+  if (state.geminiModel) {
+    geminiModelSelect.value = state.geminiModel;
   }
   if (state.supabaseUrl) {
     supabaseUrlInput.value = state.supabaseUrl;
@@ -102,6 +107,7 @@ function toggleProfile(show) {
 function handleSettingsSubmit(e) {
   e.preventDefault();
   const gemini = geminiKeyInput.value.trim();
+  const model = geminiModelSelect.value;
   const sbUrl = supabaseUrlInput.value.trim();
   const sbKey = supabaseKeyInput.value.trim();
 
@@ -109,6 +115,8 @@ function handleSettingsSubmit(e) {
     state.geminiKey = gemini;
     localStorage.setItem('MAGI_GEMINI_KEY', gemini);
   }
+  state.geminiModel = model;
+  localStorage.setItem('MAGI_GEMINI_MODEL', model);
   state.supabaseUrl = sbUrl;
   state.supabaseKey = sbKey;
   localStorage.setItem('MAGI_SUPABASE_URL', sbUrl);
@@ -139,7 +147,8 @@ function updateMagiCard(cardId, data) {
 
 // Helper to query Gemini API
 async function queryGemini(systemPrompt, userPrompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${state.geminiKey}`;
+  const model = state.geminiModel || 'gemini-1.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${state.geminiKey}`;
 
   const payload = {
     contents: [
