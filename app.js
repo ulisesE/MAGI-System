@@ -54,14 +54,90 @@ const profileSummary = document.getElementById('profileSummary');
 // Setup default date to today
 dateInput.value = new Date().toISOString().split('T')[0];
 
+// Dynamic Model Population
+async function populateGeminiModels() {
+  const modelSelect = document.getElementById('geminiModel');
+  if (!modelSelect) return;
+  
+  if (!state.geminiKey) {
+    modelSelect.innerHTML = `
+      <option value="gemini-1.5-flash" selected>gemini-1.5-flash (Recomendado - Gratuito 15 RPM)</option>
+      <option value="gemini-1.5-pro">gemini-1.5-pro (Inteligente - Gratuito 2 RPM)</option>
+      <option value="gemini-2.0-flash-lite-preview-02-05">gemini-2.0-flash-lite (Ligero / Gratuito)</option>
+      <option value="gemini-2.0-flash">gemini-2.0-flash (Estándar 2.0)</option>
+      <option value="gemini-2.5-flash">gemini-2.5-flash (Estándar 2.5)</option>
+    `;
+    return;
+  }
+
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${state.geminiKey}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("No se pudo obtener la lista de modelos");
+    const data = await response.json();
+    
+    if (data.models && data.models.length > 0) {
+      const availableModels = data.models.filter(m => 
+        m.supportedGenerationMethods.includes('generateContent')
+      );
+      
+      if (availableModels.length > 0) {
+        modelSelect.innerHTML = '';
+        availableModels.forEach(m => {
+          const mName = m.name.replace('models/', '');
+          const option = document.createElement('option');
+          option.value = mName;
+          
+          let labelSuffix = '';
+          if (mName === 'gemini-1.5-flash') labelSuffix = ' (Recomendado - Gratuito 15 RPM)';
+          else if (mName === 'gemini-1.5-pro') labelSuffix = ' (Inteligente - Gratuito 2 RPM)';
+          else if (mName.includes('lite')) labelSuffix = ' (Ligero / Gratuito)';
+          else if (mName === 'gemini-2.0-flash') labelSuffix = ' (Estándar 2.0)';
+          else if (mName === 'gemini-2.5-flash') labelSuffix = ' (Estándar 2.5)';
+          
+          option.textContent = `${mName}${labelSuffix}`;
+          if (mName === state.geminiModel) {
+            option.selected = true;
+          }
+          modelSelect.appendChild(option);
+        });
+        
+        // If the current selected model is not in the list, default to gemini-1.5-flash or first available
+        const currentModelExists = availableModels.some(m => m.name.replace('models/', '') === state.geminiModel);
+        if (!currentModelExists) {
+          const defaultModel = availableModels.some(m => m.name.replace('models/', '') === 'gemini-1.5-flash') 
+            ? 'gemini-1.5-flash' 
+            : availableModels[0].name.replace('models/', '');
+          state.geminiModel = defaultModel;
+          localStorage.setItem('MAGI_GEMINI_MODEL', defaultModel);
+          modelSelect.value = defaultModel;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error al cargar modelos dinámicos:", error);
+    // Keep fallback list
+    modelSelect.innerHTML = `
+      <option value="gemini-1.5-flash">gemini-1.5-flash (Recomendado - Gratuito 15 RPM)</option>
+      <option value="gemini-1.5-pro">gemini-1.5-pro (Inteligente - Gratuito 2 RPM)</option>
+      <option value="gemini-2.0-flash-lite-preview-02-05">gemini-2.0-flash-lite (Ligero / Gratuito)</option>
+      <option value="gemini-2.0-flash">gemini-2.0-flash (Estándar 2.0)</option>
+      <option value="gemini-2.5-flash">gemini-2.5-flash (Estándar 2.5)</option>
+    `;
+    if (state.geminiModel) {
+      modelSelect.value = state.geminiModel;
+    }
+  }
+}
+
 // Initialization
-function init() {
+async function init() {
   if (state.geminiKey) {
     geminiKeyInput.value = state.geminiKey;
   }
-  if (state.geminiModel) {
-    geminiModelSelect.value = state.geminiModel;
-  }
+  
+  await populateGeminiModels();
+
   if (state.supabaseUrl) {
     supabaseUrlInput.value = state.supabaseUrl;
   }
@@ -104,7 +180,7 @@ function toggleProfile(show) {
 }
 
 // Handle Settings Form Submit
-function handleSettingsSubmit(e) {
+async function handleSettingsSubmit(e) {
   e.preventDefault();
   const gemini = geminiKeyInput.value.trim();
   const model = geminiModelSelect.value;
@@ -121,6 +197,9 @@ function handleSettingsSubmit(e) {
   state.supabaseKey = sbKey;
   localStorage.setItem('MAGI_SUPABASE_URL', sbUrl);
   localStorage.setItem('MAGI_SUPABASE_KEY', sbKey);
+
+  // Dynamically load models permitted by the saved key
+  await populateGeminiModels();
 
   toggleSettings(false);
   alert('Credenciales actualizadas.');
