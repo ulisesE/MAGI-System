@@ -1069,4 +1069,94 @@ textarea:focus, select:focus, input:focus {
   100% { transform: rotate(360deg); }
 }
 
+/* Decisive Factor Styling */
+.decisive-factor {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: rgba(var(--primary-rgb), 0.05);
+  border: 1px dashed rgba(var(--primary-rgb), 0.3);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  text-shadow: 0 0 5px var(--primary-glow);
+  text-align: center;
+  line-height: 1.4;
+  animation: pulse-border 2s infinite alternate;
+}
+
+.approved .decisive-factor {
+  background-color: rgba(0, 255, 136, 0.03);
+  border-color: rgba(0, 255, 136, 0.25);
+  color: var(--green-color);
+  text-shadow: 0 0 5px var(--green-glow);
+}
+
+.rejected .decisive-factor {
+  background-color: rgba(255, 51, 68, 0.03);
+  border-color: rgba(255, 51, 68, 0.25);
+  color: var(--red-color);
+  text-shadow: 0 0 5px var(--red-glow);
+}
+
+@keyframes pulse-border {
+  0% { border-color: rgba(var(--primary-rgb), 0.15); }
+  100% { border-color: rgba(var(--primary-rgb), 0.4); }
+}
+
+/* Critical Pattern Alert Banner Styling */
+.danger-pattern-banner {
+  width: 100%;
+  border: 2px solid var(--red-color);
+  background: linear-gradient(rgba(255, 51, 68, 0.15) 0%, rgba(0, 0, 0, 0.8) 100%);
+  padding: 1rem;
+  border-radius: 4px;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 15px rgba(255, 51, 68, 0.3);
+  position: relative;
+  overflow: hidden;
+  animation: alert-flash-border 1s infinite alternate;
+}
+
+.danger-pattern-banner::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    rgba(255, 255, 255, 0) 50%, 
+    rgba(255, 51, 68, 0.05) 50%
+  );
+  background-size: 100% 6px;
+  pointer-events: none;
+}
+
+.danger-pattern-banner .banner-title {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--red-color);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.35rem;
+  text-shadow: 0 0 8px var(--red-glow);
+}
+
+.danger-pattern-banner .banner-text {
+  font-size: 0.85rem;
+  color: var(--text-color);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+@keyframes alert-flash-border {
+  0% { border-color: var(--red-color); box-shadow: 0 0 10px rgba(255, 51, 68, 0.2); }
+  100% { border-color: #ff8899; box-shadow: 0 0 20px rgba(255, 51, 68, 0.5); }
+}
+
+
+
 

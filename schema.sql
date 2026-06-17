@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS memories (
   category VARCHAR(50) NOT NULL, -- 'Finanzas', 'Relaciones', 'Salud', 'Trabajo', 'Proyecto'
   decision TEXT NOT NULL, -- The user's input question
   
+  -- Emotional Memory (Upgrade 1)
+  emotional_state VARCHAR(50) DEFAULT 'Calmado', -- Calmado, Ansioso, Estresado, Eufórico, Cansado
+  daily_context TEXT DEFAULT NULL, -- Daily events or context
+  
   -- Melchior Evaluation
   melchor_vote VARCHAR(2) NOT NULL, -- 'SI' / 'NO'
   melchor_confidence INT NOT NULL, -- 0 to 100
@@ -22,9 +26,9 @@ CREATE TABLE IF NOT EXISTS memories (
   balthasar_reasoning TEXT NOT NULL,
   
   -- Casper Evaluation
-  gaspar_vote VARCHAR(2) NOT NULL, -- 'SI' / 'NO'
-  gaspar_confidence INT NOT NULL,
-  gaspar_reasoning TEXT NOT NULL,
+  casper_vote VARCHAR(2) NOT NULL, -- 'SI' / 'NO'
+  casper_confidence INT NOT NULL,
+  casper_reasoning TEXT NOT NULL,
   
   -- Consensus Summary
   consensus_vote VARCHAR(10) NOT NULL, -- 'APPROVED' / 'REJECTED'
