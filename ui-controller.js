@@ -80,10 +80,19 @@ function updateMagiCard(cardId, data) {
   const progressEl = document.getElementById(`progress-${cardId}`);
 
   card.className = 'magi-card'; 
-  const isYes = data.vote.toUpperCase() === 'SI';
-  card.classList.add(isYes ? 'vote-si' : 'vote-no');
-
-  voteEl.textContent = isYes ? 'SÍ' : 'NO';
+  const voteStr = (data.vote || '').toUpperCase();
+  
+  if (voteStr === 'SI') {
+    card.classList.add('vote-si');
+    voteEl.textContent = 'SÍ';
+  } else if (voteStr === 'NO') {
+    card.classList.add('vote-no');
+    voteEl.textContent = 'NO';
+  } else {
+    // Dialogue Mode N/A
+    voteEl.textContent = 'INFO';
+  }
+  
   reasonEl.textContent = data.reasoning;
   confEl.textContent = data.confidence;
   progressEl.style.width = `${data.confidence}%`;
@@ -121,13 +130,21 @@ window.renderHistory = function() {
     if (isResolved) {
       const rec = item.consensus_vote;
       const act = item.user_action;
-      const obeyed = (rec === 'APPROVED' && act === 'SI') || (rec === 'REJECTED' && act === 'NO');
-      actionHtml = `
-        <div class="history-card-reflection">
-          <strong>Acción tomada:</strong> ${act} (${obeyed ? '<span class="action-obeyed">OBEDECIÓ</span>' : '<span class="action-ignored">IGNORÓ</span>'})
-          ${item.reflection ? `<br/><em>"${item.reflection}"</em>` : ''}
-        </div>
-      `;
+      if (rec === 'INFO' || act === 'N/A') {
+        actionHtml = `
+          <div class="history-card-reflection">
+            <strong>Consulta de Diálogo / Consejo</strong>
+          </div>
+        `;
+      } else {
+        const obeyed = (rec === 'APPROVED' && act === 'SI') || (rec === 'REJECTED' && act === 'NO');
+        actionHtml = `
+          <div class="history-card-reflection">
+            <strong>Acción tomada:</strong> ${act} (${obeyed ? '<span class="action-obeyed">OBEDECIÓ</span>' : '<span class="action-ignored">IGNORÓ</span>'})
+            ${item.reflection ? `<br/><em>"${item.reflection}"</em>` : ''}
+          </div>
+        `;
+      }
     } else {
       actionHtml = `
         <div class="history-resolve-block" id="resolve-${item.id}">
@@ -141,6 +158,9 @@ window.renderHistory = function() {
       `;
     }
 
+    const verdictClass = item.consensus_vote.toLowerCase();
+    const verdictLabel = item.consensus_vote === 'INFO' ? 'INFO/SÍNTESIS' : (item.consensus_vote === 'APPROVED' ? 'APPROVED' : 'REJECTED');
+
     const card = document.createElement('div');
     card.className = 'history-card';
     card.innerHTML = `
@@ -150,7 +170,7 @@ window.renderHistory = function() {
       </div>
       <div class="history-card-body">${item.decision}</div>
       <div class="history-card-verdict">
-        <span>MAGI: <span class="verdict-tag ${item.consensus_vote.toLowerCase()}">${item.consensus_vote === 'APPROVED' ? 'APPROVED' : 'REJECTED'}</span></span>
+        <span>MAGI: <span class="verdict-tag ${verdictClass}">${verdictLabel}</span></span>
       </div>
       ${actionHtml}
     `;
@@ -227,6 +247,7 @@ async function handleDecisionSubmit(e) {
   const date = dateInput.value;
   const emotionalState = emotionalStateSelect.value;
   const dailyContext = dailyContextInput.value.trim();
+  const consultMode = document.getElementById('consultMode') ? document.getElementById('consultMode').value : 'DECISION';
 
   if (!decision || !category || !date) return;
 
@@ -255,6 +276,7 @@ async function handleDecisionSubmit(e) {
 
   try {
     const memoriesContext = await getRecentMemoriesContext(category);
+    const profileSummaryContext = typeof getProfileSummaryContext === 'function' ? getProfileSummaryContext() : '';
     const { rate, ignoredNos } = calculateObedienceRate();
     
     let userBiasContext = "";
@@ -269,8 +291,8 @@ async function handleDecisionSubmit(e) {
 
     // Minified inputs based on Econ Mode
     const userPrompt = state.econMode
-      ? `dec: "${decision}"\ncat: "${category}"`
-      : `dec: "${decision}"\ncat: "${category}"\nhr: "${new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}"\nemo: "${emotionalState}"\nctx: "${dailyContext || 'N/A'}"${userBiasContext}${memoriesContext}`;
+      ? `mode: "${consultMode}"\ndec: "${decision}"\ncat: "${category}"`
+      : `mode: "${consultMode}"\ndec: "${decision}"\ncat: "${category}"\nhr: "${new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}"\nemo: "${emotionalState}"\nctx: "${dailyContext || 'N/A'}"${userBiasContext}${profileSummaryContext}${memoriesContext}`;
     
     let systemPrompt = UNIFIED_MAGI_PROMPT + strictnessModifier;
     if (state.econMode) {
@@ -358,7 +380,11 @@ async function renderMagiOutput(responseJson, decision, category, isFromCache) {
     updateMagiCard('balthasar', responseJson.balthasar);
     updateMagiCard('casper', responseJson.casper);
 
-    consensusValue.textContent = responseJson.consensus.final_decision;
+    if (responseJson.consensus.final_decision === 'INFO') {
+      consensusValue.textContent = 'SÍNTESIS';
+    } else {
+      consensusValue.textContent = responseJson.consensus.final_decision;
+    }
     consensusSummary.textContent = responseJson.consensus.summary;
     decisiveFactorEl.textContent = responseJson.consensus.decisive_factor || 'Votación consolidada sin fluctuaciones.';
 
@@ -375,8 +401,10 @@ async function renderMagiOutput(responseJson, decision, category, isFromCache) {
     consensusBadge.className = 'consensus-badge';
     if (responseJson.consensus.final_decision === 'APPROVED') {
       consensusBadge.classList.add('approved');
+    } else if (responseJson.consensus.final_decision === 'REJECTED') {
+      consensusBadge.classList.add('rejected');
     } else {
-      consensusBadge.className = 'consensus-badge rejected';
+      consensusBadge.classList.add('info');
     }
 
     // Local First: Compile decision memory locally and unshift immediately
@@ -404,7 +432,7 @@ async function renderMagiOutput(responseJson, decision, category, isFromCache) {
       consensus_reasoning: responseJson.consensus.advice 
         ? `${responseJson.consensus.summary} | Consejo: ${responseJson.consensus.advice}` 
         : responseJson.consensus.summary,
-      user_action: null,
+      user_action: responseJson.consensus.final_decision === 'INFO' ? 'N/A' : null,
       reflection: null
     };
 

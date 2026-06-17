@@ -22,6 +22,9 @@
   --red-color: #ff3344;
   --red-glow: rgba(255, 51, 68, 0.25);
 
+  --info-color: #ffaa00;
+  --info-glow: rgba(255, 170, 0, 0.25);
+
   --transition-speed: 0.25s;
 }
 
@@ -867,6 +870,12 @@ textarea:focus, select:focus, input:focus {
   border: 1px solid rgba(255, 51, 68, 0.2);
 }
 
+.verdict-tag.info {
+  background-color: rgba(255, 170, 0, 0.05);
+  color: var(--info-color);
+  border: 1px solid rgba(255, 170, 0, 0.2);
+}
+
 .history-action-status {
   font-size: 0.7rem;
   color: var(--text-dim);
@@ -1120,6 +1129,28 @@ textarea:focus, select:focus, input:focus {
 .rejected .consensus-advice {
   border-left-color: var(--red-color);
   background-color: rgba(255, 51, 68, 0.01);
+}
+
+.consensus-badge.info {
+  border-color: var(--info-color);
+  background-color: rgba(255, 170, 0, 0.02);
+}
+
+.info .badge-value {
+  color: var(--info-color);
+  text-shadow: 0 0 10px var(--info-glow);
+}
+
+.info .consensus-advice {
+  border-left-color: var(--info-color);
+  background-color: rgba(255, 170, 0, 0.01);
+}
+
+.info .decisive-factor {
+  background-color: rgba(255, 170, 0, 0.03);
+  border-color: rgba(255, 170, 0, 0.25);
+  color: var(--info-color);
+  text-shadow: 0 0 5px var(--info-glow);
 }
 
 @keyframes pulse-border {
