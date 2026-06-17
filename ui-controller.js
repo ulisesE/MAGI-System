@@ -407,11 +407,11 @@ async function renderMagiOutput(responseJson, decision, category, isFromCache) {
       melchor_confidence: localRecord.melchor_confidence,
       melchor_reasoning: localRecord.melchor_reasoning,
       balthasar_vote: localRecord.balthasar_vote,
-      balthasar_confidence: localRecord.balthasar.confidence,
+      balthasar_confidence: localRecord.balthasar_confidence,
       balthasar_reasoning: localRecord.balthasar_reasoning,
       casper_vote: localRecord.casper_vote,
-      casper_confidence: localRecord.casper.confidence,
-      casper_reasoning: localRecord.casper.reasoning,
+      casper_confidence: localRecord.casper_confidence,
+      casper_reasoning: localRecord.casper_reasoning,
       consensus_vote: localRecord.consensus_vote,
       consensus_reasoning: localRecord.consensus_reasoning
     });
