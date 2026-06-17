@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAGI SYSTEM - Personal Node</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="globals.css">
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- CRT Scanline overlay effect -->
+  <div class="crt-overlay"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="nerv-header">
+      <div class="header-left">
+        <span class="system-status"><span class="blink-dot"></span> SYSTEM ONLINE</span>
+        <h1>MAGI-04 <span class="accent-text">PERSONAL</span></h1>
+      </div>
+      <div class="header-right">
+        <span class="node-id">NODE: TOKYO-3 / SUITE-v1.0</span>
+        <button id="settingsBtn" class="nerv-btn-icon" title="Configuración de API"><i class="fa-solid fa-gears"></i></button>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="nerv-grid">
+      <!-- Left Column Group -->
+      <div class="left-column">
+        <!-- Input Panel -->
+        <section class="panel input-panel">
+          <div class="panel-header">
+            <span class="panel-num">01</span>
+            <h2>CONSULTA DE DECISIONES</h2>
+          </div>
+          <div class="panel-body">
+            <form id="decisionForm">
+              <div class="form-group">
+                <label for="decisionText">¿Qué decisión vas a tomar?</label>
+                <textarea id="decisionText" placeholder="Ej: Comprar auriculares SuperMix de 100 USD..." required></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="category">Categoría</label>
+                  <select id="category" required>
+                    <option value="" disabled selected>Selecciona...</option>
+                    <option value="Finanzas">Finanzas</option>
+                    <option value="Relaciones">Relaciones</option>
+                    <option value="Salud">Salud</option>
+                    <option value="Trabajo">Trabajo</option>
+                    <option value="Proyecto">Proyecto</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="date">Fecha</label>
+                  <input type="date" id="date" required>
+                </div>
+              </div>
+
+              <button type="submit" id="consultBtn" class="nerv-btn-primary">
+                <span class="btn-text">CONSULTAR MAGI</span>
+                <span class="btn-scan"></span>
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- Stats & History Panel -->
+        <section class="panel history-panel">
+          <div class="panel-header">
+            <span class="panel-num">03</span>
+            <h2>HISTORIAL DE CONCIENCIA</h2>
+          </div>
+          <div class="panel-body">
+            <div class="stats-box">
+              <span class="stats-label">TASA DE OBEDIENCIA</span>
+              <div id="obedienceRate" class="stats-value">--%</div>
+              <div class="stats-sub">Porcentaje de conformidad con las directivas MAGI</div>
+              <button id="profileBtn" class="nerv-btn-secondary" style="margin-top:0.75rem; width:100%; font-size:0.75rem;">
+                <i class="fa-solid fa-brain"></i> ANALIZAR PERFIL ULISES
+              </button>
+            </div>
+            
+            <div class="history-list-wrapper">
+              <div id="historyList" class="history-list">
+                <div class="no-history">Sin registros en memoria (Configure Supabase para activar)</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- MAGI Node Monitor -->
+      <section class="panel monitor-panel">
+        <div class="panel-header">
+          <span class="panel-num">02</span>
+          <h2>SISTEMA TRIPLE DE SUPERCOMPUTADORAS</h2>
+        </div>
+        
+        <div class="panel-body monitor-layout">
+          <!-- Thinking indicator -->
+          <div id="thinkingOverlay" class="thinking-overlay hidden">
+            <div class="scanner"></div>
+            <div class="alert-box">
+              <div class="alert-title"><i class="fa-solid fa-circle-exclamation blink"></i> PROCESANDO DECISIÓN</div>
+              <div class="alert-text">ANALIZANDO CONSENSO ÉTICO...</div>
+              <div class="magi-status-list">
+                <div id="status-melchior" class="status-item"><span class="indicator"></span> MELCHIOR <span class="state">OFFLINE</span></div>
+                <div id="status-balthasar" class="status-item"><span class="indicator"></span> BALTASAR <span class="state">OFFLINE</span></div>
+                <div id="status-gaspar" class="status-item"><span class="indicator"></span> CASPER <span class="state">OFFLINE</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty state -->
+          <div id="emptyState" class="empty-state">
+            <div class="logo-placeholder">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <p>EL SISTEMA MAGI ESPERA UNA CONSULTA</p>
+            <span class="subtext">Ingrese una decisión y presione el botón de consulta para iniciar la evaluación tripartita.</span>
+          </div>
+
+          <!-- Active MAGI Result -->
+          <div id="magiResult" class="magi-result hidden">
+            
+            <!-- Consensus Badge -->
+            <div id="consensusBadge" class="consensus-badge">
+              <div class="badge-title">DECISIÓN FINAL</div>
+              <div id="consensusValue" class="badge-value">APPROVED</div>
+              <div id="consensusSummary" class="badge-summary">Explicación resumida de la decisión final de las tres computadoras.</div>
+            </div>
+
+            <!-- Individual Computations -->
+            <div class="personalities-grid">
+              
+              <!-- Melchior -->
+              <div id="card-melchior" class="magi-card">
+                <div class="card-header">
+                  <div class="title-wrap">
+                    <h3>MELCHIOR-1</h3>
+                    <span class="subtitle">CIENTÍFICO / LÓGICO</span>
+                  </div>
+                  <div id="vote-melchior" class="vote-badge">SI</div>
+                </div>
+                <div class="card-body">
+                  <p id="reason-melchior">Cargando...</p>
+                  <div class="confidence-bar-wrap">
+                    <span class="label">Confianza: <span id="conf-melchior">0</span>%</span>
+                    <div class="progress-bar"><div id="progress-melchior" class="progress"></div></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Balthasar -->
+              <div id="card-balthasar" class="magi-card">
+                <div class="card-header">
+                  <div class="title-wrap">
+                    <h3>BALTASAR-2</h3>
+                    <span class="subtitle">MATERNO / EMOCIONAL</span>
+                  </div>
+                  <div id="vote-balthasar" class="vote-badge">SI</div>
+                </div>
+                <div class="card-body">
+                  <p id="reason-balthasar">Cargando...</p>
+                  <div class="confidence-bar-wrap">
+                    <span class="label">Confianza: <span id="conf-balthasar">0</span>%</span>
+                    <div class="progress-bar"><div id="progress-balthasar" class="progress"></div></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Gaspar -->
+              <div id="card-gaspar" class="magi-card">
+                <div class="card-header">
+                  <div class="title-wrap">
+                    <h3>CASPER-3</h3>
+                    <span class="subtitle">DESEOS / PASIONES</span>
+                  </div>
+                  <div id="vote-gaspar" class="vote-badge">SI</div>
+                </div>
+                <div class="card-body">
+                  <p id="reason-gaspar">Cargando...</p>
+                  <div class="confidence-bar-wrap">
+                    <span class="label">Confianza: <span id="conf-gaspar">0</span>%</span>
+                    <div class="progress-bar"><div id="progress-gaspar" class="progress"></div></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-backdrop hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>CONFIGURACIÓN DE CREDENCIALES</h2>
+          <button id="closeSettingsBtn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">Ingresa tus claves de acceso. Se guardan localmente en tu navegador.</p>
+          <form id="settingsForm">
+            <div class="form-group">
+              <label for="geminiKey">Gemini API Key</label>
+              <input type="password" id="geminiKey" placeholder="AIzaSy..." required>
+            </div>
+            <div class="form-group">
+              <label for="supabaseUrl">Supabase URL (opcional para MVP 2+)</label>
+              <input type="text" id="supabaseUrl" placeholder="https://xxxx.supabase.co">
+            </div>
+            <div class="form-group">
+              <label for="supabaseKey">Supabase Anon Key (opcional para MVP 2+)</label>
+              <input type="password" id="supabaseKey" placeholder="eyJhbGciOi...">
+            </div>
+            <button type="submit" class="nerv-btn-primary">GUARDAR CONFIGURACIÓN</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal-backdrop hidden">
+      <div class="modal" style="max-width: 600px;">
+        <div class="modal-header">
+          <h2>DIAGNÓSTICO PSICOLÓGICO DE SUJETO</h2>
+          <button id="closeProfileBtn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="profileLoading" class="profile-loading">
+            <span class="blink"><i class="fa-solid fa-brain"></i> COMPILANDO REGISTROS CONDUCTUALES...</span>
+          </div>
+          <div id="profileContent" class="profile-content hidden">
+            <div class="profile-meta">
+              <div>SUJETO: <span class="accent-text" style="font-weight: 700;">ULISES REVELES</span></div>
+              <div style="font-size:0.75rem; color:var(--text-dim);">TIPO: EVALUACIÓN DINÁMICA DE CONCIENCIA</div>
+            </div>
+            
+            <div class="profile-section">
+              <h3>FORTALEZAS</h3>
+              <ul id="profileStrengths" class="profile-list"></ul>
+            </div>
+            
+            <div class="profile-section">
+              <h3>RIESGOS DETECTADOS</h3>
+              <ul id="profileRisks" class="profile-list"></ul>
+            </div>
+
+            <div class="profile-section">
+              <h3>PATRONES DE CONDUCTA</h3>
+              <ul id="profilePatterns" class="profile-list"></ul>
+            </div>
+
+            <div class="profile-section">
+              <h3>SÍNTESIS DIAGNÓSTICA</h3>
+              <p id="profileSummary" class="profile-summary-text"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
