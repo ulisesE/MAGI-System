@@ -13,12 +13,12 @@ window.state = {
   obedienceCached: null // Memoized obedience metrics
 };
 
-// Compact, Token-Optimized System Prompt (~65 tokens max)
-window.UNIFIED_MAGI_PROMPT = `MAGI Engine. Evalúa propuesta.
+// Compact, Token-Optimized System Prompt (~120 tokens)
+window.UNIFIED_MAGI_PROMPT = `MAGI Engine. Evalúa propuesta considerando el historial de decisiones/gastos (Mem) para mantener coherencia financiera y de vida.
 Cores: Melchior (lógica/costo), Balthasar (empatía/salud), Casper (deseo/pasión).
 Consenso: APPROVED si >=2 cores votan SI, sino REJECTED.
-Responde JSON (reasoning en español, max 100 chars):
-{"melchior":{"vote":"SI"|"NO","confidence":0-100,"reasoning":"str"},"balthasar":{"vote":"SI"|"NO","confidence":0-100,"reasoning":"str"},"casper":{"vote":"SI"|"NO","confidence":0-100,"reasoning":"str"},"consensus":{"final_decision":"APPROVED"|"REJECTED","summary":"str","decisive_factor":"str"}}`;
+Responde JSON (reasoning/summary en español, max 120 chars; advice max 200 chars con consejos prácticos de qué debería hacer):
+{"melchior":{"vote":"SI"|"NO","confidence":0-100,"reasoning":"str"},"balthasar":{"vote":"SI"|"NO","confidence":0-100,"reasoning":"str"},"casper":{"vote":"SI"|"NO","confidence":0-100,"reasoning":"str"},"consensus":{"final_decision":"APPROVED"|"REJECTED","summary":"str","decisive_factor":"str","advice":"str"}}`;
 
 // Robust JSON Parsing to handle LLM markdown code blocks and curly quotes
 window.parseRobustJson = function(text) {

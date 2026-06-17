@@ -13,11 +13,11 @@ window.getRecentMemoriesContext = async function(category) {
   if (state.econMode) return ''; 
   if (!state.history || state.history.length === 0) return '';
 
-  const MAX_MEMORIES = 2; // Capped context limit
+  const MAX_MEMORIES = 6; // Expanded context limit
 
-  // 1. Filter only resolved memories from active category
+  // 1. Get recent memories from active category (include pending ones)
   const activeCatRecords = state.history
-    .filter(r => r.category === category && r.user_action !== null)
+    .filter(r => r.category === category)
     .slice(0, MAX_MEMORIES);
 
   let records = [...activeCatRecords];
@@ -25,17 +25,18 @@ window.getRecentMemoriesContext = async function(category) {
   // 2. Supplement up to MAX_MEMORIES with other categories if needed
   if (records.length < MAX_MEMORIES) {
     const backupRecords = state.history
-      .filter(r => r.category !== category && r.user_action !== null)
+      .filter(r => r.category !== category)
       .slice(0, MAX_MEMORIES - records.length);
     records = records.concat(backupRecords);
   }
 
   if (records.length === 0) return '';
 
-  // 3. Ultra-compact piped context string (no JSON brackets)
-  const compactLogs = records.map(r => 
-    `cat:${r.category.toLowerCase()}|dec:${r.decision.slice(0, 40).replace(/\|/g, '')}|rec:${r.consensus_vote}|act:${r.user_action}`
-  ).join(' || ');
+  // 3. Compact piped context string (no JSON brackets)
+  const compactLogs = records.map(r => {
+    const actionVal = r.user_action === null ? 'PENDING' : r.user_action;
+    return `cat:${r.category.toLowerCase()}|dec:${r.decision.slice(0, 150).replace(/\|/g, '')}|rec:${r.consensus_vote}|act:${actionVal}`;
+  }).join(' || ');
 
   return `\n\nMem: [${compactLogs}]`;
 };

@@ -243,6 +243,8 @@ async function handleDecisionSubmit(e) {
   emptyState.classList.add('hidden');
   magiResult.classList.add('hidden');
   thinkingOverlay.classList.remove('hidden');
+  const adviceEl = document.getElementById('consensusAdvice');
+  if (adviceEl) adviceEl.classList.add('hidden');
 
   statusMelchior.className = 'status-item';
   statusBalthasar.className = 'status-item';
@@ -319,6 +321,8 @@ async function renderMagiOutput(responseJson, decision, category, isFromCache) {
     emptyState.classList.add('hidden');
     magiResult.classList.add('hidden');
     thinkingOverlay.classList.remove('hidden');
+    const adviceEl = document.getElementById('consensusAdvice');
+    if (adviceEl) adviceEl.classList.add('hidden');
     
     statusMelchior.className = 'status-item active';
     statusMelchior.querySelector('.state').textContent = 'EVALUATING LOBES...';
@@ -358,6 +362,16 @@ async function renderMagiOutput(responseJson, decision, category, isFromCache) {
     consensusSummary.textContent = responseJson.consensus.summary;
     decisiveFactorEl.textContent = responseJson.consensus.decisive_factor || 'Votación consolidada sin fluctuaciones.';
 
+    const adviceEl = document.getElementById('consensusAdvice');
+    if (adviceEl) {
+      if (responseJson.consensus.advice) {
+        adviceEl.textContent = `CONSEJO NERV: ${responseJson.consensus.advice}`;
+        adviceEl.classList.remove('hidden');
+      } else {
+        adviceEl.classList.add('hidden');
+      }
+    }
+
     consensusBadge.className = 'consensus-badge';
     if (responseJson.consensus.final_decision === 'APPROVED') {
       consensusBadge.classList.add('approved');
@@ -387,7 +401,9 @@ async function renderMagiOutput(responseJson, decision, category, isFromCache) {
       casper_confidence: responseJson.casper.confidence,
       casper_reasoning: responseJson.casper.reasoning,
       consensus_vote: responseJson.consensus.final_decision,
-      consensus_reasoning: responseJson.consensus.summary,
+      consensus_reasoning: responseJson.consensus.advice 
+        ? `${responseJson.consensus.summary} | Consejo: ${responseJson.consensus.advice}` 
+        : responseJson.consensus.summary,
       user_action: null,
       reflection: null
     };
